@@ -113,4 +113,4 @@ if __name__ == '__main__':
     print('Exporter started')
 
     while True:
-        time.sleep(1)
+        time.sleep(300)
