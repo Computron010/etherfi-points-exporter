@@ -2,6 +2,12 @@
 
 A Prometheus exporter for ether.fi loyalty and EigenLayer points.
 
+## Quickstart
+
+```
+docker run -e WALLET=<YOUR WALLET> -p 8000:8000 ghcr.io/computron010/etherfi-points-exporter:main
+```
+
 ## Docker Environment Variables
 | Variable | Description |
 | --- | --- |
