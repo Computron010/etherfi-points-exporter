@@ -36,10 +36,15 @@ def get_wallet_points():
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             data = response.json()
-            return {
-                'etherfi_loyalty_points': data['totalIntegrationLoyaltyPoints'],
-                'etherfi_eigenlayer_points': data['totalIntegrationEigenLayerPoints'],
-            }
+            points = {}
+            for key, val in data.items():
+                if type(val) is dict and 'loyaltyPoints' in val:
+                    points[f'etherfi_{key}_loyalty'] = val['loyaltyPoints']
+                    points[f'etherfi_{key}_el'] = val['eigenlayerPoints']
+
+            points['etherfi_loyalty_points'] = data['totalIntegrationLoyaltyPoints']
+            points['etherfi_eigenlayer_points'] = data['totalIntegrationEigenLayerPoints']
+            return points
         else:
             print("Failed to fetch website. Status code:", response.status_code)
     except Exception as e:

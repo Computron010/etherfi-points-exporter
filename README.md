@@ -1,6 +1,6 @@
 # Ether.fi Points Exporter
 
-A Prometheus exporter for ether.fi loyalty and EigenLayer points.
+A Prometheus exporter for ether.fi loyalty and EigenLayer points. Exposes all points categories.
 
 ## Quickstart
 
