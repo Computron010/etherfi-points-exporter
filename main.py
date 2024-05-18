@@ -37,7 +37,7 @@ def get_wallet_points():
         if response.status_code == 200:
             data = response.json()
             points = {}
-            for key, val in data.items():
+            for key, val in data['integrations'].items():
                 if type(val) is dict and 'loyaltyPoints' in val:
                     points[f'etherfi_{key}_loyalty'] = val['loyaltyPoints']
                     points[f'etherfi_{key}_el'] = val['eigenlayerPoints']
