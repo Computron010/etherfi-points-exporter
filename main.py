@@ -28,8 +28,6 @@ headers = {
     'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
 }
 
-S1_points = 37100695710
-
 def get_wallet_points():
     url = f'https://app.ether.fi/api/portfolio/v3/{WALLET}'  # Replace with the URL of the website you want to scrape
     try:
@@ -38,6 +36,7 @@ def get_wallet_points():
             data = response.json()
             points = {}
             for key, val in data['integrations'].items():
+                key = key.replace('-', '_')
                 if type(val) is dict and 'loyaltyPoints' in val:
                     points[f'etherfi_{key}_loyalty'] = val['loyaltyPoints']
                     points[f'etherfi_{key}_el'] = val['eigenlayerPoints']
@@ -52,47 +51,31 @@ def get_wallet_points():
     return None
 
 
-def get_total_eigenlayer_points():
-    url = 'https://www.etherfi.bid/api/etherfi/total'
+def get_total_points():
+    url = 'https://app.ether.fi/api/points'
     try:
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             data = response.json()
-            return data['eigenLayerPoints']
+            return data
         else:
             print("Failed to fetch website. Status code:", response.status_code)
     except Exception as e:
         print("Error occurred while scraping website:", e)
     return None
 
-
-def get_total_loyalty_points():
-    url = 'https://www.etherfi.bid/api/etherfi/points'
-    try:
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            data = response.json()
-            pts = data['loyaltyPoints']
-            return (pts - S1_points) * 10 + S1_points
-        else:
-            print("Failed to fetch website. Status code:", response.status_code)
-    except Exception as e:
-        print("Error occurred while scraping website:", e)
-    return None
-
-
-class TotalEigenLayerPointsCollector(Collector):
+class TotalPointsCollector(Collector):
     def collect(self):
-        gauge_metric = GaugeMetricFamily('etherfi_total_eigenlayer_points', f'Total Eigenlayer Points', labels=[])
-        gauge_metric.add_metric([], get_total_eigenlayer_points())
-        yield gauge_metric
-
-
-class TotalLoyaltyPointsCollector(Collector):
-    def collect(self):
-        gauge_metric = GaugeMetricFamily('etherfi_total_loyalty_points', f'Total Loyalty Points', labels=[])
-        gauge_metric.add_metric([], get_total_loyalty_points())
-        yield gauge_metric
+        labels = [
+            ('loyaltyPoints', 'etherfi_total_loyalty_points', 'Total Loyalty Points'),
+            ('eigenLayerPoints', 'etherfi_total_eigenlayer_points', 'Total Eigenlayer Points'),
+        ]
+        data = get_total_points()
+        for ele in labels:
+            key, name, documentation = ele
+            gauge_metric = GaugeMetricFamily(name, documentation, labels=[])
+            gauge_metric.add_metric([], data[key])
+            yield gauge_metric
 
 
 class WalletPointsCollector(Collector):
@@ -108,8 +91,7 @@ if __name__ == '__main__':
     start_http_server(PORT)
 
     REGISTRY.register(WalletPointsCollector())
-    REGISTRY.register(TotalLoyaltyPointsCollector())
-    REGISTRY.register(TotalEigenLayerPointsCollector())
+    REGISTRY.register(TotalPointsCollector())
 
     REGISTRY.unregister(GC_COLLECTOR)
     REGISTRY.unregister(PLATFORM_COLLECTOR)
